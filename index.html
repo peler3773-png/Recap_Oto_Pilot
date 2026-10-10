@@ -147,6 +147,7 @@ select:focus, input:focus, textarea:focus{border-color:var(--emas2); box-shadow:
   <p class="info-kecil" style="margin-bottom:6px">Format: pasaran|YYYY-MM-DD|angka4digit</p>
   
   <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:10px 0">
+    <button onclick="muatDariSumber()">🌐 Muat dari GitHub</button>
     <button onclick="muatDariFolderSumber()">📁 Pilih data_undian.txt</button>
     <button onclick="muatSalinanLokal()">📂 Pakai Salinan di Folder Ini</button>
   </div>
@@ -383,6 +384,7 @@ select:focus, input:focus, textarea:focus{border-color:var(--emas2); box-shadow:
 <input type="file" id="pilihBerkas" accept=".txt" style="display:none">
 <input type="file" id="pilihSalinan" accept=".txt" style="display:none">
 <script>
+const DATA_UNDIAN_URL = "https://raw.githubusercontent.com/peler3773-png/Data-Lotre/main/data_undian.txt";
 const KUNCI_SIMPANAN = "data_lotre_simpan";
 const KUNCI_WAKTU = "data_lotre_waktu";
 const BATAS_TAHUN = 3;
@@ -390,6 +392,18 @@ let TARGET_2D = 90;
 let semuaData = [];
 let dataProses = null;
 let daftar4DTerakhir = [];
+
+async function muatDariSumber() {
+  try {
+    const res = await fetch(DATA_UNDIAN_URL);
+    if (!res.ok) throw new Error("Gagal mengambil data");
+    const teks = await res.text();
+    prosesDataTeks(teks, "GitHub");
+  } catch (e) {
+    alert("⚠️ Gagal memuat dari GitHub: " + e.message + "\nCoba tempel data secara manual atau pilih file dari perangkat Anda.");
+  }
+}
+
 function aturModeWarna(elemenId, mode) {
   const el = document.getElementById(elemenId);
   if (!el) return;
@@ -602,21 +616,27 @@ function tampilHasil(h){
   document.getElementById('r-d2d').textContent=h.terakhir.d2;
   document.getElementById('r-d2t').textContent=h.terakhir.t2;
   document.getElementById('r-d2b').textContent=h.terakhir.b2;
+
   document.getElementById('kotak2DD').innerHTML=`<span class="baris-salin">${h.dd.join('*')}</span>`;
   document.getElementById('kotak2DT').innerHTML=`<span class="baris-salin">${h.dt.join('*')}</span>`;
   document.getElementById('kotak2DB').innerHTML=`<span class="baris-salin">${h.db.join('*')}</span>`;
+
   const jmlDDbawah=h.nolDD.length+h.b10DD.length;
   const jmlDTbawah=h.nolDT.length+h.b10DT.length;
   const jmlDBbawah=h.nolDB.length+h.b10DB.length;
+
   setJml('jmlLblDDbawah',jmlDDbawah);
   setJml('jmlLblDTbawah',jmlDTbawah);
   setJml('jmlLblDBbawah',jmlDBbawah);
+
   document.getElementById('kotakBawahDD').innerHTML = susunWarnaBawah(h.nolDD, h.b10DD);
   document.getElementById('kotakBawahDT').innerHTML = susunWarnaBawah(h.nolDT, h.b10DT);
   document.getElementById('kotakBawahDB').innerHTML = susunWarnaBawah(h.nolDB, h.b10DB);
+
   setJml('jmlLblDDatas', h.seringDD.length);
   setJml('jmlLblDTatas', h.seringDT.length);
   setJml('jmlLblDBatas', h.seringDB.length);
+
   document.getElementById('kotakAtasDD').innerHTML = susunWarnaAtas(h.seringDD);
   document.getElementById('kotakAtasDT').innerHTML = susunWarnaAtas(h.seringDT);
   document.getElementById('kotakAtasDB').innerHTML = susunWarnaAtas(h.seringDB);
@@ -631,40 +651,23 @@ function terapkanAngka(){
   tampilPasaran();
 }
 
-// ==== FUNGSI PENCARIAN DIPERBAIKI SESUAI PERMINTAAN ====
-// Aturan baru:
-// - 1 digit (0-9) → cari digit tunggal di mana saja
-// - 2 digit sama (00,11,...,99) → cari rangkaian 2 digit UTUH, BUKAN digit tunggal
-// - 3 digit sama (000,111,...,999) → cari rangkaian 3 digit UTUH
-// - 4 digit → cari cocok persis atau mengandung urutan lengkap
 function buatKondisiPencarian(input) {
   const s = input.trim().replace(/\s+/g, '');
-  if (!/^\d{1,4}$/.test(s)) return []; // hanya angka 1–4 digit
-
+  if (!/^\d{1,4}$/.test(s)) return [];
   const len = s.length;
-
-  // Kasus khusus: digit berulang sama → cari sebagai rangkaian utuh
   const semuaSama = s.split('').every(c => c === s[0]);
-
   if (semuaSama && len === 2) {
-    // 00,11,...,99 → cari rangkaian 2 digit lengkap
     return [angka => angka.includes(s)];
   }
   if (semuaSama && len === 3) {
-    // 000,111,...,999 → cari rangkaian 3 digit lengkap
     return [angka => angka.includes(s)];
   }
-
-  // Kasus biasa
   if (len === 1) {
-    // 1 digit biasa → cari di mana saja
     return [angka => angka.includes(s)];
   } else if (len === 2 || len === 3) {
-    // 2/3 digit berbeda → WAJIB mengandung SEMUA digit yang dimasukkan
     const digitWajib = [...new Set(s.split(''))];
     return [angka => digitWajib.every(d => angka.includes(d))];
   } else if (len === 4) {
-    // 4 digit → cocok persis atau mengandung urutan lengkap
     return [
       angka => angka === s,
       angka => angka.includes(s)
@@ -673,7 +676,6 @@ function buatKondisiPencarian(input) {
   return [];
 }
 
-// === Gabung 3DD + 3DB → 4D LN ===
 function prosesGenerate() {
   const a = document.getElementById('databet2').value.trim();
   const b = document.getElementById('databet3').value.trim();
@@ -712,29 +714,24 @@ function hapus() {
   document.getElementById('kotakHasilCari').style.display = 'none';
 }
 
-// === FITUR CARI ANGKA 4D ===
 function cariAngka4D() {
   const kataKunci = document.getElementById('inputCari').value.trim();
   const kotakHasil = document.getElementById('kotakHasilCari');
   const labelHasil = document.getElementById('labelHasilCari');
   const daftarHasil = document.getElementById('daftarHasilCari');
   const kotakTeksHasil = document.getElementById('kotakTeksHasil');
-
   if (!kataKunci || daftar4DTerakhir.length === 0) {
     kotakHasil.style.display = 'none';
     return;
   }
-
   const kondisi = buatKondisiPencarian(kataKunci);
   if (!kondisi.length) {
     kotakHasil.style.display = 'none';
     return;
   }
-
   const cocok = daftar4DTerakhir.filter(angka =>
     kondisi.some(cek => cek(angka))
   );
-
   kotakHasil.style.display = 'block';
   if (cocok.length === 0) {
     labelHasil.innerHTML = `<span class="tidak-ditemukan">❌ Tidak ditemukan</span> untuk: <strong>${kataKunci}</strong>`;
@@ -750,7 +747,6 @@ function cariAngka4D() {
     else if (len === 2) tipe = `2 digit (wajib ada keduanya)`;
     else if (len === 3) tipe = `3 digit (wajib ada ketiganya)`;
     else tipe = `4 digit (cocok/mengandung)`;
-
     labelHasil.innerHTML = `<span class="ditemukan">✅ Ditemukan ${cocok.length} angka</span> untuk <strong>${tipe}:</strong> ${kataKunci}`;
     kotakTeksHasil.value = cocok.join(' * ');
     daftarHasil.innerHTML = cocok.map(angka =>
@@ -764,7 +760,6 @@ function salinBlokHasil() {
   salinTeks(teks, null);
 }
 
-// === Inisialisasi saat halaman dimuat ===
 document.addEventListener('DOMContentLoaded', () => {
   mulai();
 });
