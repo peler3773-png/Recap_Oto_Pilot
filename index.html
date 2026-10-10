@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oto Pilot — 3 Tahun Per Pasaran</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+<h1>🔮 Oto Pilot — 3 Tahun Per Pasaran</h1>
+<div class="area-data">
+  <div class="card-judul" style="margin-bottom:8px">📂 Sumber Data: data_undian.txt</div>
+  <p class="info-kecil" style="margin-bottom:6px">Format: pasaran|YYYY-MM-DD|angka4digit</p>
+  
+  <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:10px 0">
+    <button onclick="muatDariFolderSumber()">📁 Pilih data_undian.txt</button>
+    <button onclick="muatSalinanLokal()">📂 Pakai Salinan di Folder Ini</button>
+  </div>
+  
+  <div class="peringatan">
+    💡 <strong>Filter per pasaran:</strong> Hanya data dalam <b>3 tahun terakhir</b> dihitung. Data lebih lama otomatis dilewati.
+  </div>
+  
+  <textarea id="masukanData" class="form-control" rows="6" placeholder="Tempel isi file data_undian.txt di sini..."></textarea>
+  <div style="text-align:center; margin-top:8px">
+    <button class="btn-success" onclick="prosesDataLokal()">✅ Pakai Data Di Atas</button>
+  </div>
+</div>
+<div class="baris-atas">
+  <label>Jumlah 2D:</label>
+  <input type="number" id="inputTarget" value="90" min="1" max="99" style="width:70px">
+  <button onclick="terapkanAngka()">✅ Terapkan</button>
+  <span class="info-kecil">Sekarang: <b id="nilaiSaatIni">90</b></span>
+</div>
+<div class="baris-tombol">
+  <label>Pasaran:</label>
+  <select id="pilihPasaran" onchange="tampilPasaran()">
+<option value="GM5">GERMANY PLUS 5</option>
+<option value="TMD">TENNESSEE MID</option>
+<option value="TXD">TEXAS DAY (SENIN LIBUR)</option>
+<option value="MCSM">MASSACHUSETTS MID</option>
+<option value="VD">VIRGINIA DAY</option>
+<option value="NYM">NEW YORK MID</option>
+<option value="NCD">NORTH CAROLINA DAY</option>
+<option value="MQ03">MOROCCO QUATRO 03:00</option>
+<option value="OG1">OREGON JAM 03:00</option>
+<option value="OG2">OREGON JAM 06:00</option>
+<option value="TXE">TEXAS EVENING (SENIN LIBUR)</option>
+<option value="TE">TENNESSEE EVENING</option>
+<option value="MCSE">MASSACHUSETTS EVENING</option>
+<option value="CLF">CALIFORNIA</option>
+<option value="OG3" selected>OREGON JAM 09:00</option>
+<option value="NYE">NEW YORK EVENING</option>
+<option value="NJE">NEW JERSEY EVENING</option>
+<option value="VN">VIRGINIA NIGHT</option>
+<option value="TXN">TEXAS NIGHT (SENIN LIBUR)</option>
+<option value="NCE">NORTH CAROLINA EVENING</option>
+<option value="OG4">OREGON JAM 12:00</option>
+<option value="BE">BULLSEYE</option>
+<option value="TTM1">TOTO MACAU JAM 13:10</option>
+<option value="SD">SYDNEY</option>
+<option value="TTM2">TOTO MACAU JAM 16:00</option>
+<option value="SGP">SINGAPORE (SEL/JUM LIBUR)</option>
+<option value="MQ18">MOROCCO QUATRO 18:00</option>
+<option value="TTM3">TOTO MACAU JAM 19:00</option>
+<option value="PS">PHILIPPINES (MINGGU LIBUR)</option>
+<option value="MQ21">MOROCCO QUATRO 21:00</option>
+<option value="TM">TENNESSEE MORNING (MINGGU LIBUR)</option>
+<option value="TXM">TEXAS MORNING (MINGGU LIBUR)</option>
+<option value="TTM4">TOTO MACAU JAM 22:10</option>
+<option value="HK">HONGKONG</option>
+<option value="MQ00">MOROCCO QUATRO 00:00</option>
+<option value="NJM">NEW JERSEY MID</option>
+  </select>
+  <button onclick="mulai(true)">🔄 Muat Ulang</button>
+  <button class="tombol-segar" onclick="segarHalaman()">🔃 Reload</button>
+  <span id="terakhirMuat" class="info-kecil">Terakhir: —</span>
+</div>
+<div id="status" class="loading">⏳ Pilih file atau tempel data untuk memulai...</div>
+<div id="konten" style="display:none">
+  <div class="ringkas">
+    <div class="ringkas-judul">📊 RINGKASAN <span id="infoBatas" class="indikator-batas">—</span></div>
+    <div class="ringkas-baris">
+      <div class="ringkas-kolom"><span class="ringkas-label">HARI</span><span class="ringkas-nilai" id="r-hari">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">TANGGAL</span><span class="ringkas-nilai" id="r-tgl">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">SHIO</span><span class="ringkas-nilai" id="r-shio">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">DATA 1</span><span class="ringkas-nilai" id="r-data1">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">DATA 2</span><span class="ringkas-nilai" id="r-data2">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">2DD</span><span class="ringkas-nilai" id="r-d2d">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">2DT</span><span class="ringkas-nilai" id="r-d2t">—</span></div>
+      <div class="ringkas-kolom"><span class="ringkas-label">2DB</span><span class="ringkas-nilai" id="r-d2b">—</span></div>
+    </div>
+    <div class="info-kecil" style="margin-top:10px">Rentang data: <b id="rentangTgl">—</b></div>
+  </div>
+  <div class="card">
+    <div class="card-judul">📋 Data Pilihan</div>
+    <div class="grid-2d">
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDD">0</span>
+          <span class="card-judul" style="margin-bottom:0">DD</span>
+        </div>
+        <div class="card-kotak" id="kotak2DD"><span class="kosong">Memuat...</span></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotak2DD')">📋 Salin DD</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDT">0</span>
+          <span class="card-judul" style="margin-bottom:0">DT</span>
+        </div>
+        <div class="card-kotak" id="kotak2DT"><span class="kosong">Memuat...</span></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotak2DT')">📋 Salin DT</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDB">0</span>
+          <span class="card-judul" style="margin-bottom:0">DB</span>
+        </div>
+        <div class="card-kotak" id="kotak2DB"><span class="kosong">Memuat...</span></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotak2DB')">📋 Salin DB</button>
+      </div>
+    </div>
+  </div>
+  <div class="card belum-keluar">
+    <div class="card-judul belum-judul">🟢 Keluar &lt; 10 Kali</div>
+    <div class="grid-2d">
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDDbawah">0</span>
+          <span class="card-judul belum-judul" style="margin-bottom:0">DD &lt;10x</span>
+        </div>
+        <div class="card-kotak" id="kotakBawahDD"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakBawahDD')">📋 Salin</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDTbawah">0</span>
+          <span class="card-judul belum-judul" style="margin-bottom:0">DT &lt;10x</span>
+        </div>
+        <div class="card-kotak" id="kotakBawahDT"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakBawahDT')">📋 Salin</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDBbawah">0</span>
+          <span class="card-judul belum-judul" style="margin-bottom:0">DB &lt;10x</span>
+        </div>
+        <div class="card-kotak" id="kotakBawahDB"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakBawahDB')">📋 Salin</button>
+      </div>
+    </div>
+  </div>
+  <div class="card sering-keluar">
+    <div class="card-judul sering-judul">🟡 Keluar ≥ 10 Kali</div>
+    <div class="grid-2d">
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDDatas">0</span>
+          <span class="card-judul sering-judul" style="margin-bottom:0">DD ≥10x</span>
+        </div>
+        <div class="card-kotak" id="kotakAtasDD"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakAtasDD')">📋 Salin</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDTatas">0</span>
+          <span class="card-judul sering-judul" style="margin-bottom:0">DT ≥10x</span>
+        </div>
+        <div class="card-kotak" id="kotakAtasDT"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakAtasDT')">📋 Salin</button>
+      </div>
+      <div class="card-2d">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLblDBatas">0</span>
+          <span class="card-judul sering-judul" style="margin-bottom:0">DB ≥10x</span>
+        </div>
+        <div class="card-kotak" id="kotakAtasDB"></div>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'kotakAtasDB')">📋 Salin</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-judul">🧩 Hasil: 3DD & 3DB</div>
+    <div style="text-align:center; margin:8px 0">
+      <button class="btn-dariN" onclick="buat3DDdariN()">🟣 3DD dari <span id="btnTxtDD">90</span> (DD+DT)</button>
+      <button class="btn-dariN" onclick="buat3DBdariN()">🟣 3DB dari <span id="btnTxtDB">90</span> (DT+DB)</button>
+      <br><br>
+      <button class="btn-bawah10" onclick="buat3DDdariBawah10()">🟢 3DD dari &lt;10x</button>
+      <button class="btn-bawah10" onclick="buat3DBdariBawah10()">🟢 3DB dari &lt;10x</button>
+      <button class="btn-atas10" onclick="buat3DDdariAtas10()">🟡 3DD dari ≥10x</button>
+      <button class="btn-atas10" onclick="buat3DBdariAtas10()">🟡 3DB dari ≥10x</button>
+    </div>
+    <div class="grid-3d">
+      <div class="card-3d" id="blok3DD">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLbl3DD">0</span>
+          <span class="card-judul" style="margin-bottom:0">3DD</span>
+        </div>
+        <textarea class="form-control" id="databet2" readonly placeholder="Klik tombol buat 3DD dulu..."></textarea>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'databet2')">📋 Salin 3DD</button>
+      </div>
+      <div class="card-3d" id="blok3DB">
+        <div class="judul-dengan-jumlah">
+          <span class="teks-jumlah" id="jmlLbl3DB">0</span>
+          <span class="card-judul" style="margin-bottom:0">3DB</span>
+        </div>
+        <textarea class="form-control" id="databet3" readonly placeholder="Klik tombol buat 3DB dulu..."></textarea>
+        <button class="btn-salin-hijau" onclick="salinElemen(this, 'databet3')">📋 Salin 3DB</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="nama-pasaran-terpilih" id="namaPasaranTerpilih">—</div>
+    <div class="card-judul">🔗 3DD Gabung 3DB → 4D LN</div>
+    <div style="text-align:center; margin-bottom:10px">
+      <button class="btn-success" onclick="prosesGenerate()">✅ Generate 4D LN</button>
+      <button class="btn-danger" onclick="hapus()">🗑️ Reset</button>
+    </div>
+    <p class="text-success" style="text-align:center">Hasil : <strong id="jumlahLN">0 LN</strong></p>
+    <textarea class="form-control" id="output" rows="6" readonly placeholder="Hasil 4D muncul di sini..."></textarea>
+    <button class="btn-salin-hijau" onclick="salinElemen(this, 'output')">📋 Salin 4D</button>
+    
+    <div style="margin-top:15px; border-top:1px dashed var(--emas); padding-top:15px">
+      <div class="card-judul" style="font-size:1rem">🔍 Cari Angka di Hasil 4D</div>
+      <div class="baris-cari">
+        <label>Cari pola/angka:</label>
+        <input type="text" id="inputCari" class="input-cari" placeholder="Contoh: 00 / 000 / 00*11" maxlength="20" oninput="cariAngka4D()">
+        <button class="btn-bawah10" onclick="document.getElementById('inputCari').value=''; cariAngka4D()">🧹 Bersihkan</button>
+      </div>
+      <div id="kotakHasilCari" style="display:none" class="hasil-cari">
+        <span id="labelHasilCari"></span>
+        <textarea id="kotakTeksHasil" class="form-control kotak-teks-hasil" readonly placeholder="Hasil pencarian..."></textarea>
+        <button class="btn-salin-hijau" onclick="salinBlokHasil()">📋 Salin Semua Hasil</button>
+        <div id="daftarHasilCari" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="sumber-info">
+    ⚡ Dimuat dari: <span id="sumberMuat">—</span>
+  </div>
+</div>
+</div>
+<input type="file" id="pilihBerkas" accept=".txt" style="display:none">
+<input type="file" id="pilihSalinan" accept=".txt" style="display:none">
+<script src="script.js"></script>
+</body>
+</html>
